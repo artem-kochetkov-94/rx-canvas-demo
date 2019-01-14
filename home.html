@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>demo</title>
+  </head>
+  <body>
+    <canvas id="canvas" width="500px" height="500px"></canvas>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/rxjs/5.0.3/Rx.js"></script>
+    <script>
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "yellow";
+      ctx.fillRect(0, 0, 500, 500);
+
+      const move$ = Rx.Observable.fromEvent(canvas, "mousemove")
+        .throttleTime(100)
+        .map(e => {
+          return { x: e.clientX, y: e.clientY };
+        })
+        .pairwise();
+
+      const subscription = move$.subscribe(
+        x => {
+          addPoint(x);
+          drawLine(x);
+        },
+        err => {
+          console.warn("Error:", err);
+        },
+        () => {
+          console.info("Completed");
+        }
+      );
+
+      // add points touched to latest time in stream
+      function addPoint(pointObj) {
+        ctx.fillStyle = "#c82124";
+        ctx.beginPath();
+        ctx.arc(pointObj[1].x, pointObj[1].y, 5, 0, 2 * Math.PI);
+        ctx.fill();
+      }
+
+      function drawLine(pointsObj) {
+        ctx.moveTo(pointsObj[0].x, pointsObj[0].y);
+        ctx.lineTo(pointsObj[1].x, pointsObj[1].y);
+        ctx.stroke();
+      }
+    </script>
+  </body>
+</html>
